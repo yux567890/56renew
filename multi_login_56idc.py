@@ -118,7 +118,7 @@ def send_telegram_notification(token, chat_id, message):
         return False
 
 def recognize_captcha(session, captcha_url):
-    """识别验证码图片"""
+    """识别验证码图片，优化防403措施"""
     if not CAPTCHA_OCR_AVAILABLE:
         print("❌ 验证码识别功能不可用")
         return None
@@ -126,17 +126,96 @@ def recognize_captcha(session, captcha_url):
     try:
         print(f"🖼️ 正在下载验证码图片: {captcha_url}")
         
-        # 下载验证码图片
-        response = session.get(captcha_url, proxies=proxy_config, timeout=15)
+        # 模拟用户行为，先访问登录页面再获取验证码
+        time.sleep(1)  # 模拟用户查看页面的时间
         
-        if response.status_code != 200:
-            print(f"❌ 下载验证码图片失败: HTTP {response.status_code}")
+        # 设置完整的请求头，模拟真实浏览器获取图片
+        captcha_headers = {
+            'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Referer': LOGIN_URL,  # 重要：设置来源页面
+            'Sec-Fetch-Dest': 'image',
+            'Sec-Fetch-Mode': 'no-cors',
+            'Sec-Fetch-Site': 'same-origin',
+            'User-Agent': session.headers.get('User-Agent'),
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+        }
+        
+        # 多次尝试机制，防止临时网络问题
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                # 下载验证码图片
+                response = session.get(
+                    captcha_url, 
+                    headers=captcha_headers,
+                    proxies=proxy_config, 
+                    timeout=15,
+                    allow_redirects=True
+                )
+                
+                if response.status_code == 200:
+                    print(f"✅ 验证码图片下载成功（大小: {len(response.content)} 字节）")
+                    break
+                elif response.status_code == 403:
+                    print(f"⚠️ 第{attempt + 1}次尝试获取验证码被拒绝 (403)，稍后重试...")
+                    if attempt < max_retries - 1:
+                        time.sleep(2 * (attempt + 1))  # 递增延迟
+                        continue
+                    else:
+                        print("❌ 验证码获取被服务器拒绝，可能被识别为机器人")
+                        return None
+                elif response.status_code == 404:
+                    print(f"❌ 验证码图片不存在 (404): {captcha_url}")
+                    return None
+                else:
+                    print(f"❌ 下载验证码图片失败: HTTP {response.status_code}")
+                    if attempt < max_retries - 1:
+                        time.sleep(1)
+                        continue
+                    else:
+                        return None
+                        
+            except requests.exceptions.Timeout:
+                print(f"⚠️ 第{attempt + 1}次尝试超时，稍后重试...")
+                if attempt < max_retries - 1:
+                    time.sleep(2)
+                    continue
+                else:
+                    print("❌ 验证码下载超时")
+                    return None
+            except Exception as e:
+                print(f"⚠️ 第{attempt + 1}次尝试失败: {e}")
+                if attempt < max_retries - 1:
+                    time.sleep(1)
+                    continue
+                else:
+                    raise
+        
+        # 检查响应内容
+        if not response.content:
+            print("❌ 验证码图片内容为空")
+            return None
+            
+        # 检查是否是有效的图片格式
+        content_type = response.headers.get('Content-Type', '').lower()
+        if 'image' not in content_type and len(response.content) < 100:
+            print(f"❌ 可能不是有效的图片文件 (Content-Type: {content_type})")
             return None
         
         # 使用PIL打开图片
-        image = Image.open(BytesIO(response.content))
+        try:
+            image = Image.open(BytesIO(response.content))
+            print(f"✅ 图片加载成功，尺寸: {image.size}, 模式: {image.mode}")
+        except Exception as e:
+            print(f"❌ 图片格式错误: {e}")
+            return None
         
         # 图片预处理（提高OCR识别率）
+        print("🎨 正在预处理图片...")
+        
         # 转为灰度图
         if image.mode != 'L':
             image = image.convert('L')

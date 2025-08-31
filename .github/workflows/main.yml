@@ -26,7 +26,6 @@ jobs:
           pip install Image
           pip install Pillow
           pip install pytesseract
-          pip install PIL
       - name: Run multi_login_56idc.py
         env:
           ACCOUNTS_JSON: ${{ secrets.ACCOUNTS_JSON }}

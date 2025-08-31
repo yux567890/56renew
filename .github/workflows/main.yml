@@ -24,6 +24,7 @@ jobs:
           pip install curl_cffi
           pip install requests
           pip install Image
+          pip install Pillow
           pip install pytesseract
       - name: Run multi_login_56idc.py
         env:

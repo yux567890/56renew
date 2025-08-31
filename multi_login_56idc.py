@@ -26,7 +26,9 @@ LOGIN_URL = "https://56idc.net/login"
 LOGOUT_URL = "https://56idc.net/logout.php"
 
 # SOCKS5 代理配置
-socks5_proxy_url = os.environ.get("SOCKS5_PROXY", "")
+#socks5_proxy_url = os.environ.get("SOCKS5_PROXY", "")
+socks5_proxy_url = "socks5://hsiangyu001:K4873281a@18.136.213.164:5555"
+
 proxy_config = {
     "http": socks5_proxy_url,
     "https": socks5_proxy_url
@@ -38,10 +40,17 @@ else:
     print("🌐 未配置代理，使用直连")
 
 # Telegram 配置
-telegram_bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
-chat_id = os.environ.get("TG_CHAT_ID", "")
-thread_id = os.environ.get("THREAD_ID", "")
+# telegram_bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+# chat_id = os.environ.get("TG_CHAT_ID", "")
+# thread_id = os.environ.get("THREAD_ID", "")
+# telegram_api_url = os.environ.get("TELEGRAM_API_URL", "https://api.telegram.org")
+
+
+telegram_bot_token = "7252336877:AAGRhILeDP2NbBkiVFAM-3q1sdqCKpLlPVM"
+chat_id = "453472010"
+thread_id = ""
 telegram_api_url = os.environ.get("TELEGRAM_API_URL", "https://api.telegram.org")
+
 
 if telegram_bot_token and chat_id:
     print("✅ 已配置 Telegram 通知")
@@ -49,7 +58,8 @@ else:
     print("⚠️ 未配置 Telegram 通知，将仅显示控制台输出")
 
 # 多账号配置 - 从外部JSON字符串获取
-accounts_json = os.environ.get("ACCOUNTS_JSON", "")
+#accounts_json = os.environ.get("ACCOUNTS_JSON", "")
+accounts_json = '[{"username": "hsiangyu.lu@gmail.com", "password": "k4873281"},{"username": "luyux555@gmail.com", "password": "biSh94ghdf!$ou"}]'
 
 if not accounts_json:
     print("❌ 未找到账号配置！")

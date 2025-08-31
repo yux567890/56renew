@@ -21,7 +21,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install BytesIO
           pip install requests
           pip install Image
           pip install pytesseract

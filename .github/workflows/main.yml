@@ -21,10 +21,11 @@ jobs:
 
       - name: Install dependencies
         run: |
+          pip install curl_cffi
           pip install requests
           pip install Image
           pip install pytesseract
-      - name: Run renew.py
+      - name: Run multi_login_56idc.py
         env:
           ACCOUNTS_JSON: ${{ secrets.ACCOUNTS_JSON }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
